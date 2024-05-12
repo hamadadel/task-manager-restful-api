@@ -1,4 +1,3 @@
-require('./mongoose.js');
 const { model } = require('mongoose');
 const validator = require('validator');
 
