@@ -92,18 +92,6 @@ app.get('/api/v1/tasks/:id', (req, res) =>
     .catch((error) => res.status(500).json(error))
 );
 
-app.delete('/api/v1/tasks/:id', async (req, res) => {
-  const task = await Task.findByIdAndDelete(req.params.id);
-  console.log(task);
-  if (task) {
-    const count = await Task.countDocuments({ completed: false });
-    return res
-      .status(200)
-      .json({ message: 'you have ' + count + 'inCompleted tasks' });
-  }
-  return res.status(404).json({ message: 'Task not found' });
-});
-
 app.patch('/api/v1/tasks/:id', async (req, res) => {
   const isValidRequest = Object.keys(req.body).every(
     (key) => 'description completed'.indexOf(key) >= 0
@@ -119,6 +107,16 @@ app.patch('/api/v1/tasks/:id', async (req, res) => {
       new: true,
       runValidators: true,
     });
+    if (task) return res.status(200).json(task);
+    return res.status(404).json({ message: 'Task not found' });
+  } catch (e) {
+    return res.status(500).json(e);
+  }
+});
+
+app.delete('/api/v1/tasks/:id', async (req, res) => {
+  try {
+    const task = await Task.findByIdAndDelete(req.params.id);
     if (task) return res.status(200).json(task);
     return res.status(404).json({ message: 'Task not found' });
   } catch (e) {
