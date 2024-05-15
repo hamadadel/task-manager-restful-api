@@ -1,7 +1,8 @@
-const { model } = require('mongoose');
+const { Schema, model } = require('mongoose');
 const validator = require('validator');
+const { hash, compare } = require('bcryptjs');
 
-const User = model('User', {
+const userSchema = new Schema({
   name: {
     type: String,
     required: true,
@@ -9,6 +10,8 @@ const User = model('User', {
   },
   email: {
     type: String,
+    unique: true,
+    index: true,
     trim: true,
     lowercase: true,
     required: true,
@@ -27,5 +30,22 @@ const User = model('User', {
     },
   },
 });
+
+userSchema.statics.authenticate = async (email, password) => {
+  const user = await User.findOne({ email });
+  if (!user) throw new Error('Unable to authenticate');
+  const isPasswordMatch = await compare(password, user.password);
+  if (!isPasswordMatch) throw new Error('Wrong credentials');
+  return user;
+};
+// Hash user password on save
+userSchema.pre('save', async function (next) {
+  if (this.isModified('password')) {
+    this.password = await hash(this.password, 8);
+    console.log(this.password);
+  }
+  next();
+});
+const User = model('User', userSchema);
 
 module.exports = User;
