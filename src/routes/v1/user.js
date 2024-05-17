@@ -1,31 +1,8 @@
 const router = require('express').Router();
+const auth = require('../../middlewares/auth');
 const { User } = require('../../models');
-const { compare } = require('bcryptjs');
 
-router.post('/login', async (req, res) => {
-  try {
-    if (!req.body.email || !req.body.password)
-      return res.status(400).json({ message: 'Missing Email or Password' });
-
-    const user = await User.authenticate(req.body.email, req.body.password);
-    // if (!user) return res.status(400).json({ message: 'wrong credentials' });
-
-    return res.json({ message: 'success Login', user });
-  } catch (e) {
-    return res.status(400).json({ error: 'wrong credentials' });
-  }
-});
-
-router.post('/', async (req, res) => {
-  try {
-    const user = await new User(req.body).save();
-    return res.status(201).json(user);
-  } catch (error) {
-    res.status(400).json(error);
-  }
-});
-
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     const users = await User.find({});
     return res.status(200).json(users);
