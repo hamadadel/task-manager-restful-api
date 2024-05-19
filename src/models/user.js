@@ -48,6 +48,14 @@ userSchema.methods.generateAuthToken = async function () {
   return token;
 };
 
+// Hiding the password and tokens properties [this function toJSON() get called whenever and object get stringified]
+userSchema.methods.toJSON = function () {
+  const user = this.toObject();
+  delete user.password;
+  delete user.tokens;
+  return user;
+};
+
 // Static methods all accessible on the model class itself
 userSchema.statics.authenticate = async (email, password) => {
   const user = await User.findOne({ email });
