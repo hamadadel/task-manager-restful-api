@@ -2,14 +2,14 @@ const router = require('express').Router();
 const auth = require('../../middlewares/auth');
 const { User } = require('../../models');
 
-router.get('/', auth, async (req, res) => {
+router.get('/profile', auth, async (req, res) => {
   try {
-    const users = await User.find({});
-    return res.status(200).json(users);
+    return res.status(200).json(req.authenticatedUser);
   } catch (error) {
     return res.status(500).json(error);
   }
 });
+
 router.get('/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
