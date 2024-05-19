@@ -21,7 +21,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.patch('/:id', async (req, res) => {
+router.patch('/profile', auth, async (req, res) => {
   const isValidRequest = Object.keys(req.body).every(
     (key) => 'name email password'.indexOf(key) >= 0
   );
@@ -32,20 +32,21 @@ router.patch('/:id', async (req, res) => {
         .json({ message: 'Request body has invalid fields' });
     if (!Object.keys(req.body).length)
       return res.status(400).json({ message: 'no request body' });
-    const user = await User.findById(req.params.id);
-    Object.keys(req.body).forEach((field) => (user[field] = req.body[field]));
-    await user.save();
-    if (user) return res.status(200).json(user);
-    return res.status(404).json({ message: 'User not found' });
+    Object.keys(req.body).forEach(
+      (field) => (req.authenticatedUser[field] = req.body[field])
+    );
+    await req.authenticatedUser.save();
+    return res.status(200).json(req.authenticatedUser);
   } catch (e) {
+    if (e.errorResponse.code === 11000)
+      return res.status(400).json({ message: 'Email is already taken' });
     return res.status(500).json(e);
   }
 });
-router.delete('/:id', async (req, res) => {
+router.delete('/profile', auth, async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
-    if (user) return res.status(200).json(user);
-    return res.status(404).json({ message: 'User not found' });
+    await User.findByIdAndDelete(req.authenticatedUser._id);
+    return res.status(200).json(req.authenticatedUser);
   } catch (e) {
     return res.status(500).json(e);
   }
