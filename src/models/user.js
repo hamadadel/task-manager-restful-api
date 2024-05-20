@@ -39,6 +39,11 @@ const userSchema = new Schema({
     },
   ],
 });
+userSchema.virtual('tasks', {
+  ref: 'Task',
+  localField: '_id',
+  foreignField: 'owner',
+});
 
 // Methods which accessible on the instances of that model
 userSchema.methods.generateAuthToken = async function () {

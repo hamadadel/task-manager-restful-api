@@ -1,4 +1,4 @@
-const { model } = require('mongoose');
+const { model, Schema } = require('mongoose');
 
 const Task = model('Task', {
   description: {
@@ -9,6 +9,11 @@ const Task = model('Task', {
   completed: {
     type: Boolean,
     default: false,
+  },
+  owner: {
+    type: Schema.Types.ObjectId,
+    required: true,
+    ref: 'User',
   },
 });
 

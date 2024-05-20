@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { Task } = require('../../models');
+const auth = require('../../middlewares/auth');
 
 router.get('/', async (req, res) => {
   try {
@@ -12,24 +13,34 @@ router.get('/', async (req, res) => {
 /**
  * Try Catch to handel individual errors from individual promises
  */
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
-    const task = await new Task(req.body).save();
+    const task = await new Task({
+      ...req.body,
+      owner: req.authenticatedUser._id,
+    }).save();
     return task ? res.status(201).json(task) : res.status(400).send();
   } catch (e) {
     return res.status(500).json({ error: e });
   }
 });
 
-router.get('/:id', (req, res) =>
-  Task.findById(req.params.id)
-    .then((task) =>
-      task
-        ? res.status(200).json(task)
-        : res.status(404).json({ message: 'Task not found' })
-    )
-    .catch((error) => res.status(500).json(error))
-);
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const task = await Task.findOne({
+      _id: req.params.id,
+      owner: req.authenticatedUser._id,
+    });
+    if (!task) return res.status(403);
+    return res
+      .status(200)
+      .json(task)
+
+      .catch((error) => res.status(500).json(error));
+  } catch (e) {
+    return res.status(404).json(e);
+  }
+});
 
 router.patch('/:id', async (req, res) => {
   const isValidRequest = Object.keys(req.body).every(
