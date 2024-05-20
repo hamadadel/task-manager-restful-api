@@ -38,14 +38,14 @@ router.patch('/profile', auth, async (req, res) => {
     await req.authenticatedUser.save();
     return res.status(200).json(req.authenticatedUser);
   } catch (e) {
-    if (e.errorResponse.code === 11000)
+    if (e?.errorResponse?.code === 11000)
       return res.status(400).json({ message: 'Email is already taken' });
     return res.status(500).json(e);
   }
 });
 router.delete('/profile', auth, async (req, res) => {
   try {
-    await User.findByIdAndDelete(req.authenticatedUser._id);
+    await User.findOneAndDelete({ _id: req.authenticatedUser._id });
     return res.status(200).json(req.authenticatedUser);
   } catch (e) {
     return res.status(500).json(e);

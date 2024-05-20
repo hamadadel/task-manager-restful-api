@@ -21,7 +21,7 @@ router.post('/register', async (req, res) => {
     const token = await user.generateAuthToken();
     return res.status(201).json({ user, token });
   } catch (e) {
-    if (e.errorResponse.code === 11000)
+    if (e?.errorResponse?.code === 11000)
       return res.status(400).json({ message: 'Email is already taken' });
     res.status(400).json(e);
   }

@@ -2,43 +2,47 @@ const { Schema, model } = require('mongoose');
 const validator = require('validator');
 const { hash, compare } = require('bcryptjs');
 const { sign } = require('jsonwebtoken');
+const Task = require('./task');
 
-const userSchema = new Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  email: {
-    type: String,
-    unique: true,
-    index: true,
-    trim: true,
-    lowercase: true,
-    required: true,
-    validate(value) {
-      if (!validator.isEmail(value)) throw new Error('Email is invalid');
+const userSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
     },
-  },
-  password: {
-    type: String,
-    minlength: 8,
-    trim: true,
-    required: true,
-    validate(value) {
-      if (value.toLowerCase().includes('password'))
-        throw new Error('Password must be strong');
-    },
-  },
-  tokens: [
-    {
-      token: {
-        type: String,
-        required: true,
+    email: {
+      type: String,
+      unique: true,
+      index: true,
+      trim: true,
+      lowercase: true,
+      required: true,
+      validate(value) {
+        if (!validator.isEmail(value)) throw new Error('Email is invalid');
       },
     },
-  ],
-});
+    password: {
+      type: String,
+      minlength: 8,
+      trim: true,
+      required: true,
+      validate(value) {
+        if (value.toLowerCase().includes('password'))
+          throw new Error('Password must be strong');
+      },
+    },
+    tokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+  },
+  { timestamps: true }
+);
 userSchema.virtual('tasks', {
   ref: 'Task',
   localField: '_id',
@@ -69,11 +73,19 @@ userSchema.statics.authenticate = async (email, password) => {
   if (!isPasswordMatch) throw new Error('Wrong credentials');
   return user;
 };
+/**
+ * Middlewares
+ */
 // Hash user password on save
 userSchema.pre('save', async function (next) {
   if (this.isModified('password')) {
     this.password = await hash(this.password, 8);
   }
+  next();
+});
+
+userSchema.pre('findOneAndDelete', async function (next) {
+  await Task.deleteMany({ owner: this.getQuery()._id });
   next();
 });
 const User = model('User', userSchema);
